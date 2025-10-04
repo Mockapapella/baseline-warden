@@ -1,34 +1,27 @@
 # baseline-warden
 
-Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mapping parsed tokens to official Web Status Baseline data and the `web-features` dataset.
+Pre-commit/CI gate for Baseline compatibility in HTML/CSS.
 
-## Overview
+Uses Web Status + web-features (MDN BCD) to flag features that aren’t widely/newly available.
 
-- `bw sync --lock` downloads Baseline data (Web Status API + `web-features`), writes `baseline.lock.json`, and records SHA-256 hashes for reproducible CI runs.
-- `bw scan` walks configured HTML/CSS paths, emits BCD keys (MDN Browser Compatibility Data), resolves them against the lock snapshot, and evaluates policy:
-  - Fails on `limited` features.
-  - Passes on `widely`; passes/warns on `newly` depending on policy (`widely` vs `newly_or_widely`).
-  - Warns/fails/ignores `unknown` per configuration.
-- Outputs include:
-  - Rich console table summarising severity, Baseline status, feature name, and file locations.
-  - `report.json` for CI artifacts.
-  - GitHub Actions annotations (up to 50) for PR feedback.
+## Quick Start
 
-Note on BCD: BCD (MDN Browser Compatibility Data) is the canonical dataset of browser-support keys used by MDN and tooling (for example, `css.properties.display`, `html.elements.dialog`, `api.Navigator.share`). Baseline mapping uses these keys via the `web-features` compat_features field. See https://github.com/mdn/browser-compat-data
+```bash
+uv venv .venv && source .venv/bin/activate
+uv sync --all-extras
+bw sync --lock
+bw scan --out console,json    # fails on limited, warns on unknown
+```
 
-## What it checks
+Console: `--summary-only` for compact output. Configuration guide: docs/CONFIG.md
 
-- Scans HTML, HTM, Jinja, and Jinja2 templates for element/attribute usage.
-- Scans plain CSS files for properties, values, selectors (pseudo-classes/functions), and at-rules.
-- Ignores CSS custom property declarations (e.g., `--token: ...`) and @property descriptors (`syntax`, `inherits`, `initial-value`); only the `@property` at-rule itself is reported.
-- Ignores other asset types (JS/TS, JSX/TSX, Vue, Svelte, SCSS, etc.) for the MVP. These are possible future extensions.
-- Default ignores include `node_modules`, build artifacts, and minified files; customize via `baseline-warden.toml`.
+## What It Checks
 
-### Suppress noisy tokens
+- Files: .html/.htm/.jinja/.jinja2 and .css (others ignored)
+- Findings: Baseline status per BCD key (widely/newly/limited/unknown)
+- Outputs: console (or summary-only), report.json, GitHub annotations
 
-- HTML: common global attributes like `class`, `id`, `style`, `lang`, `title`, `dir`, `hidden`, and any `aria-*` are ignored during detection. Element-level features still appear (for example, `<dialog popover>` emits `html.elements.dialog` and `html.elements.dialog.popover`).
-- CSS: custom property declarations (names beginning `--`) are ignored. Inside at-rules with descriptor taxonomies (`@property`, `@font-face`, `@counter-style`, `@page`), only the at-rule itself is reported; inner descriptors such as `src`, `system`, `size-adjust`, or `size` are not emitted as standalone properties.
-- When a value-level key doesn’t map (for example, `css.properties.font-size.clamp`), Baseline Warden falls back to the base property (`css.properties.font-size`) to reduce false “unknown”s.
+Noise control built-in: ignore global HTML attrs (class/id/aria-*), custom property declarations (`--foo`), descriptor-only at‑rules (@font-face/@counter-style/@page), and fall back value→property when needed.
 
 
 
