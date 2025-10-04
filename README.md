@@ -110,7 +110,20 @@ CLI overrides:
 
 Minimal usage (no config):
 - Defaults scan common web folders recursively (`**/templates/**`, `**/static/**`) and skip typical vendor/build folders.
-- For framework layouts (e.g., Django apps under `core/`), defaults normally “just work”; you can further constrain with `--paths`.
+- For projects that nest source under a subfolder (monorepos, services), pass `--paths` to scope the scan without editing config.
+
+### Examples across frameworks
+
+- Static sites / docs tools (pure HTML + CSS):
+  - `bw scan --paths "**/*.html" --paths "assets/**/*.css"`
+- Jinja templating in any stack (Python, Go, Rust, Node):
+  - `bw scan --paths "**/templates/**/*.html" --paths "**/templates/**/*.{jinja,jinja2}" --paths "**/static/**/*.css"`
+- Server frameworks with conventional templates/static (e.g., Flask, Django, Rails-equivalents using HTML templates):
+  - `bw scan --paths "**/templates/**/*.html" --paths "**/static/**/*.css"`
+- Node/monorepos where you only want to scan CSS (global styles, CSS Modules, Tailwind output):
+  - `bw scan --paths "**/*.css"`
+
+These are just examples; adjust globs to your layout. The scanner doesn’t depend on Python or Django—it only reads HTML/Jinja/CSS files wherever they live.
 
 For now, keep in mind:
 
