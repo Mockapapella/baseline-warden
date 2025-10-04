@@ -39,11 +39,31 @@ def detect_css(path: Path, *, encoding: str = "utf-8") -> List[Detection]:
 
             if node_type == "at-rule" and getattr(node, "lower_at_keyword", None):
                 at_kw = node.lower_at_keyword
-                add_detection(Detection(path=path, line=line, bcd_key=f"{AT_RULE_PREFIX}.{at_kw}"))
-                # Special case: @property custom property registration
-                # Do not treat its inner descriptors (syntax/inherits/initial-value) as CSS properties.
-                if at_kw == "property":
+                # Ignore page margin at-rules like @top-left, @bottom-right
+                PAGE_MARGIN_AT_RULES = {
+                    "top-left",
+                    "top-center",
+                    "top-right",
+                    "bottom-left",
+                    "bottom-center",
+                    "bottom-right",
+                    "left-top",
+                    "left-middle",
+                    "left-bottom",
+                    "right-top",
+                    "right-middle",
+                    "right-bottom",
+                }
+                if at_kw in PAGE_MARGIN_AT_RULES:
                     continue
+
+                add_detection(Detection(path=path, line=line, bcd_key=f"{AT_RULE_PREFIX}.{at_kw}"))
+
+                # Skip processing of descriptors inside certain at-rules that use their own descriptor taxonomy.
+                SKIP_DESCRIPTOR_AT_RULES = {"property", "font-face", "counter-style", "page"}
+                if at_kw in SKIP_DESCRIPTOR_AT_RULES:
+                    continue
+
                 if getattr(node, "content", None):
                     decls = _filter_declarations(
                         tinycss2.parse_declaration_list(node.content, skip_comments=True, skip_whitespace=True)
