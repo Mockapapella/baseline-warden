@@ -117,7 +117,3 @@ For now, keep in mind:
 - Only the file types above are parsed; non-matching files are skipped silently.
 - HTML parsing is tolerant but not template-aware—Jinja/templating tags are ignored.
 - CSS detection operates on raw CSS; preprocessors (SCSS/LESS) must emit CSS before scanning.
-
-## License
-
-MIT
