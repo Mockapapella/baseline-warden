@@ -21,5 +21,8 @@ dependencies = [
 [project.scripts]
 bw = "baseline_warden.cli:app"
 
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
 [tool.setuptools.packages.find]
 where = ["."]

@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 baseline.lock.json
+baseline_warden.egg-info/
+.pytest_cache/

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import typer
 
 from .config import BaselineWardenConfig, load_config
+from .index.cache import BaselineLock, write_lock
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
 
@@ -33,13 +33,12 @@ def sync(
         typer.echo("Sync is stubbed in the MVP scaffold; use --lock to generate a placeholder lock file.")
         raise typer.Exit(code=0)
 
-    placeholder = {
-        "version": 1,
-        "note": "TODO: replace with fetched Baseline feature index.",
-        "features": [],
-    }
-    out_path.write_text(json.dumps(placeholder, indent=2))
-    typer.echo(f"Created placeholder lock file at {out_path}")
+    snapshot = BaselineLock()
+    write_lock(out_path, snapshot)
+    typer.echo(
+        "Created placeholder lock file at "
+        f"{out_path} ({snapshot.feature_count} features; generated_at={snapshot.generated_at.isoformat()})"
+    )
 
 
 @app.command()
