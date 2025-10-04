@@ -3,6 +3,6 @@ repos:
     hooks:
       - id: baseline-warden
         name: baseline-warden
-        entry: bw scan --dry-run --out console --config baseline-warden.toml
+        entry: bw scan --dry-run --out console --summary-only --config baseline-warden.toml
         language: system
         files: '\\.(html|htm|jinja|jinja2|css)$'

@@ -87,6 +87,7 @@ def scan(
     out: Optional[List[str]] = typer.Option(None, "--out", help="Output formats to emit."),
     ci: bool = typer.Option(False, "--ci", help="Enable CI-friendly behavior (non-zero exit on limited features)."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Run detectors without policy enforcement."),
+    summary_only: bool = typer.Option(False, "--summary-only", help="Show only summary lines for console output."),
     lock_path: Path = typer.Option(
         DEFAULT_LOCK_PATH,
         "--lock-path",
@@ -120,7 +121,7 @@ def scan(
 
     for fmt in formats:
         if fmt == "console":
-            render_console(findings, summary, root=root)
+            render_console(findings, summary, root=root, summary_only=summary_only)
         elif fmt == "json":
             report_path = Path("report.json")
             write_json(findings, summary, report_path)

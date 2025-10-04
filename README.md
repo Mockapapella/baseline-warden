@@ -22,6 +22,36 @@ Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mappi
 - Ignores other asset types (JS/TS, JSX/TSX, Vue, Svelte, SCSS, etc.) for the MVP. These are possible future extensions.
 - Default ignores include `node_modules`, build artifacts, and minified files; customize via `baseline-warden.toml`.
 
+### Suppress noisy tokens
+
+- HTML: common global attributes like `class`, `id`, `style`, `lang`, `title`, `dir`, `hidden`, and any `aria-*` are ignored during detection. Element-level features still appear (for example, `<dialog popover>` emits `html.elements.dialog` and `html.elements.dialog.popover`).
+- CSS: custom property declarations (names beginning `--`) are ignored. Inside at-rules with descriptor taxonomies (`@property`, `@font-face`, `@counter-style`, `@page`), only the at-rule itself is reported; inner descriptors such as `src`, `system`, `size-adjust`, or `size` are not emitted as standalone properties.
+- When a value-level key doesn’t map (for example, `css.properties.font-size.clamp`), Baseline Warden falls back to the base property (`css.properties.font-size`) to reduce false “unknown”s.
+
+You can further suppress tokens using the allowlist in `baseline-warden.toml`:
+
+```
+[allowlist]
+feature_ids = [
+  # Always allow a feature by id
+]
+bcd_keys = [
+  # Suppress specific BCD keys if they’re noisy in your project
+  "css.properties.animation.infinite",
+  "css.properties.margin-inline.auto",
+]
+```
+
+### Console summary-only mode
+
+If you want a compact console output (especially in pre-commit), use:
+
+```
+bw scan --summary-only --out console
+```
+
+This prints totals and status counts without the per-finding table. The pre-commit hook in this repo uses `--summary-only` by default.
+
 ## Quick start
 
 ```bash
