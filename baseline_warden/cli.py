@@ -88,6 +88,11 @@ def scan(
     ci: bool = typer.Option(False, "--ci", help="Enable CI-friendly behavior (non-zero exit on limited features)."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Run detectors without policy enforcement."),
     summary_only: bool = typer.Option(False, "--summary-only", help="Show only summary lines for console output."),
+    paths: Optional[List[str]] = typer.Option(
+        None,
+        "--paths",
+        help="Override include.paths globs for this run (repeatable).",
+    ),
     lock_path: Path = typer.Option(
         DEFAULT_LOCK_PATH,
         "--lock-path",
@@ -107,6 +112,10 @@ def scan(
     lock = load_lock(lock_path)
     formats = out or cfg.output.formats
     root = Path.cwd()
+
+    if paths:
+        # Shallow override of include paths for ad-hoc scans
+        cfg.include.paths = list(paths)
 
     detections = collect_detections(root, cfg)
     index = build_index(lock)

@@ -29,7 +29,17 @@ class PolicyConfig(BaseModel):
 
 
 class IncludeConfig(BaseModel):
-    paths: List[str] = Field(default_factory=lambda: ["src/**", "templates/**", "static/**"])
+    paths: List[str] = Field(
+        default_factory=lambda: [
+            # Common web project locations (recursive)
+            "**/templates/**",
+            "**/static/**",
+            # Top-level fallbacks
+            "templates/**",
+            "static/**",
+            "src/**",
+        ]
+    )
 
 
 class IgnoreConfig(BaseModel):
@@ -43,6 +53,7 @@ class IgnoreConfig(BaseModel):
             ".next/**",
             ".vite/**",
             ".output/**",
+            "staticfiles/**",
             "**/*.min.*",
         ]
     )
