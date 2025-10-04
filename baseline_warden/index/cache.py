@@ -82,4 +82,4 @@ def compute_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-__all__.extend(["get_cache_dir", "CACHE_ENV_VAR"])
+__all__.extend(["get_cache_dir", "CACHE_ENV_VAR", "compute_sha256"])
