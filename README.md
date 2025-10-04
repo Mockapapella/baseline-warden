@@ -14,6 +14,13 @@ Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mappi
   - `report.json` for CI artifacts.
   - GitHub Actions annotations (up to 50) for PR feedback.
 
+## Current scope
+
+- Scans HTML, HTM, Jinja, and Jinja2 templates for element/attribute usage.
+- Scans plain CSS files for properties, values, selectors (pseudo-classes/functions), and at-rules.
+- Ignores other asset types (JS/TS, JSX/TSX, Vue, Svelte, SCSS, etc.) for the MVP. These are possible future extensions.
+- Default ignores include `node_modules`, build artifacts, and minified files; customize via `baseline-warden.toml`.
+
 ## Quick start
 
 ```bash
@@ -32,6 +39,12 @@ bw scan --dry-run
 ```
 
 Configuration defaults live in `baseline-warden.toml`. Use `--config` and `--lock-path` to point at alternative locations.
+
+For now, keep in mind:
+
+- Only the file types above are parsed; non-matching files are skipped silently.
+- HTML parsing is tolerant but not template-aware—Jinja/templating tags are ignored.
+- CSS detection operates on raw CSS; preprocessors (SCSS/LESS) must emit CSS before scanning.
 
 ## License
 
