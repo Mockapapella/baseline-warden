@@ -21,6 +21,12 @@ def collect_detections(root: Path, config: BaselineWardenConfig) -> List[Detecti
     include_patterns = config.include.paths
     ignore_patterns = config.ignore.globs
 
+    def _relative(path: Path) -> Path:
+        try:
+            return path.relative_to(root)
+        except ValueError:
+            return path
+
     html_files = iter_included_files(
         root,
         include_patterns=include_patterns,
@@ -28,7 +34,16 @@ def collect_detections(root: Path, config: BaselineWardenConfig) -> List[Detecti
         extensions=HTML_EXTENSIONS,
     )
     for file_path in html_files:
-        detections.extend(detect_html(file_path))
+        relative = _relative(file_path)
+        for detection in detect_html(file_path):
+            detections.append(
+                Detection(
+                    path=relative,
+                    line=detection.line,
+                    bcd_key=detection.bcd_key,
+                    detail=detection.detail,
+                )
+            )
 
     css_files = iter_included_files(
         root,
@@ -37,7 +52,16 @@ def collect_detections(root: Path, config: BaselineWardenConfig) -> List[Detecti
         extensions=CSS_EXTENSIONS,
     )
     for file_path in css_files:
-        detections.extend(detect_css(file_path))
+        relative = _relative(file_path)
+        for detection in detect_css(file_path):
+            detections.append(
+                Detection(
+                    path=relative,
+                    line=detection.line,
+                    bcd_key=detection.bcd_key,
+                    detail=detection.detail,
+                )
+            )
 
     return detections
 

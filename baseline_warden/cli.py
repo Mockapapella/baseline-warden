@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import typer
 
@@ -15,8 +15,14 @@ from .index.build import (
     build_web_features_index,
     fetch_web_features_dataset,
 )
+from .detect import collect_detections
+from .evaluate.policy import evaluate_detections
+from .evaluate.resolve import build_index
 from .index.cache import BaselineLock, compute_sha256, get_cache_dir, load_lock, write_lock
 from .index.fetch import fetch_features
+from .outputs.gh_annotations import emit_annotations
+from .outputs.json import write_json
+from .outputs.table import render_console
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
 
@@ -78,7 +84,7 @@ def sync(
 @app.command()
 def scan(
     config: Path = typer.Option(DEFAULT_CONFIG_PATH, "--config", help="Path to baseline-warden.toml."),
-    out: List[str] = typer.Option(["console"], "--out", help="Output formats to emit."),
+    out: Optional[List[str]] = typer.Option(None, "--out", help="Output formats to emit."),
     ci: bool = typer.Option(False, "--ci", help="Enable CI-friendly behavior (non-zero exit on limited features)."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Run detectors without policy enforcement."),
     lock_path: Path = typer.Option(
@@ -87,7 +93,7 @@ def scan(
         help="Path to baseline.lock.json produced by `bw sync --lock`.",
     ),
 ) -> None:
-    """Scan configured paths for non-Baseline features (stub)."""
+    """Scan configured paths for non-Baseline features."""
 
     cfg = _load_config(config)
     if not lock_path.exists():
@@ -98,23 +104,41 @@ def scan(
         raise typer.Exit(code=2)
 
     lock = load_lock(lock_path)
-    typer.echo("Baseline Warden MVP scaffold")
-    typer.echo(f" Policy: required_status={cfg.policy.required_status}, unknown_behavior={cfg.policy.unknown_behavior}")
-    typer.echo(f" Include paths: {', '.join(cfg.include.paths)}")
-    typer.echo(f" Ignore globs: {', '.join(cfg.ignore.globs[:4])} ...")
-    typer.echo(f" Outputs requested: {', '.join(out)}")
+    formats = out or cfg.output.formats
+    root = Path.cwd()
+
+    detections = collect_detections(root, cfg)
+    index = build_index(lock)
+    findings, summary = evaluate_detections(index, detections, cfg)
+
     typer.echo(
-        " Lock snapshot: "
-        f"{lock.feature_count} features (generated_at={lock.generated_at.isoformat()})"
+        f"Policy required_status={cfg.policy.required_status}, unknown_behavior={cfg.policy.unknown_behavior}"
+    )
+    typer.echo(
+        f"Scanned {len(detections)} detections across {len(formats)} output format(s)."
     )
 
+    for fmt in formats:
+        if fmt == "console":
+            render_console(findings, summary, root=root)
+        elif fmt == "json":
+            report_path = Path("report.json")
+            write_json(findings, summary, report_path)
+            typer.echo(f" Wrote JSON report to {report_path}")
+        elif fmt == "gh-annotations":
+            emit_annotations(findings)
+        else:
+            typer.echo(f" Unknown output format '{fmt}' ignored.")
+
     if dry_run:
-        typer.echo(" Dry run complete (no detections performed yet).")
+        typer.echo(" Dry run enabled; exiting without enforcing policy.")
         raise typer.Exit(code=0)
 
-    typer.echo(" Detection logic not implemented yet; exiting with success for MVP skeleton.")
-    if ci:
-        typer.echo(" CI mode requested; returning success until detectors are implemented.")
+    if summary.has_failures():
+        typer.echo(" Baseline violations detected.", err=True)
+        raise typer.Exit(code=1)
+
+    typer.echo(" Baseline scan passed.")
     raise typer.Exit(code=0)
 
 

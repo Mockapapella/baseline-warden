@@ -51,4 +51,4 @@ def test_scan_with_lock(tmp_path: Path) -> None:
         catch_exceptions=False,
     )
     assert result.exit_code == 0
-    assert "Lock snapshot" in result.stdout
+    assert "Dry run enabled" in result.stdout
