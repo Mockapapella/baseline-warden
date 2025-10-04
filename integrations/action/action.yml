@@ -15,9 +15,7 @@ runs:
       shell: bash
     - run: bw sync --lock
       shell: bash
-    - run: bw scan --ci --config ${{ inputs.config }} --out console,json,gh-annotations --dry-run
-      shell: bash
-    - run: echo '{"note": "Composite action placeholder"}' > report.json
+    - run: bw scan --ci --config ${{ inputs.config }} --out console,json,gh-annotations
       shell: bash
     - uses: actions/upload-artifact@v4
       with:

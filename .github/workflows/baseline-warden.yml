@@ -15,9 +15,7 @@ jobs:
           python-version: '3.11'
       - run: pip install -e .
       - run: bw sync --lock
-      - run: bw scan --ci --config baseline-warden.toml --out console,json,gh-annotations --dry-run
-      - name: Placeholder report artifact
-        run: echo '{"note": "Report generation pending implementation."}' > report.json
+      - run: bw scan --ci --config baseline-warden.toml --out console,json,gh-annotations
       - uses: actions/upload-artifact@v4
         with:
           name: baseline-warden-report
