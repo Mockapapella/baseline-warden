@@ -38,7 +38,12 @@ def detect_css(path: Path, *, encoding: str = "utf-8") -> List[Detection]:
             node_type = getattr(node, "type", None)
 
             if node_type == "at-rule" and getattr(node, "lower_at_keyword", None):
-                add_detection(Detection(path=path, line=line, bcd_key=f"{AT_RULE_PREFIX}.{node.lower_at_keyword}"))
+                at_kw = node.lower_at_keyword
+                add_detection(Detection(path=path, line=line, bcd_key=f"{AT_RULE_PREFIX}.{at_kw}"))
+                # Special case: @property custom property registration
+                # Do not treat its inner descriptors (syntax/inherits/initial-value) as CSS properties.
+                if at_kw == "property":
+                    continue
                 if getattr(node, "content", None):
                     decls = _filter_declarations(
                         tinycss2.parse_declaration_list(node.content, skip_comments=True, skip_whitespace=True)
@@ -124,6 +129,9 @@ def _declaration_detections(
 
     line = line_override or getattr(declaration, "source_line", 1)
     name = declaration.lower_name
+    # Ignore custom property declarations like --foo: ...
+    if name.startswith("--"):
+        return []
     detections = [Detection(path=path, line=line, bcd_key=f"{PROPERTY_PREFIX}.{name}")]
     values = _property_value_idents(getattr(declaration, "value", []))
     for value in values:
