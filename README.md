@@ -2,7 +2,7 @@
 
 Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mapping parsed tokens to official Web Status Baseline data and the `web-features` dataset.
 
-## What it does today
+## Overview
 
 - `bw sync --lock` downloads Baseline data (Web Status API + `web-features`), writes `baseline.lock.json`, and records SHA-256 hashes for reproducible CI runs.
 - `bw scan` walks configured HTML/CSS paths, emits BCD keys (MDN Browser Compatibility Data), resolves them against the lock snapshot, and evaluates policy:
@@ -16,7 +16,7 @@ Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mappi
 
 Note on BCD: BCD (MDN Browser Compatibility Data) is the canonical dataset of browser-support keys used by MDN and tooling (for example, `css.properties.display`, `html.elements.dialog`, `api.Navigator.share`). Baseline mapping uses these keys via the `web-features` compat_features field. See https://github.com/mdn/browser-compat-data
 
-## Current scope
+## What it checks
 
 - Scans HTML, HTM, Jinja, and Jinja2 templates for element/attribute usage.
 - Scans plain CSS files for properties, values, selectors (pseudo-classes/functions), and at-rules.
@@ -30,19 +30,7 @@ Note on BCD: BCD (MDN Browser Compatibility Data) is the canonical dataset of br
 - CSS: custom property declarations (names beginning `--`) are ignored. Inside at-rules with descriptor taxonomies (`@property`, `@font-face`, `@counter-style`, `@page`), only the at-rule itself is reported; inner descriptors such as `src`, `system`, `size-adjust`, or `size` are not emitted as standalone properties.
 - When a value-level key doesn’t map (for example, `css.properties.font-size.clamp`), Baseline Warden falls back to the base property (`css.properties.font-size`) to reduce false “unknown”s.
 
-You can further suppress tokens using the allowlist in `baseline-warden.toml`:
 
-```
-[allowlist]
-feature_ids = [
-  # Always allow a feature by id
-]
-bcd_keys = [
-  # Suppress specific BCD keys if they’re noisy in your project
-  "css.properties.animation.infinite",
-  "css.properties.margin-inline.auto",
-]
-```
 
 ### Console summary-only mode
 
@@ -125,10 +113,4 @@ Minimal usage (no config):
 - Node/monorepos where you only want to scan CSS (global styles, CSS Modules, Tailwind output):
   - `bw scan --paths "**/*.css"`
 
-These are just examples; adjust globs to your layout. The scanner doesn’t depend on Python or Django—it only reads HTML/Jinja/CSS files wherever they live.
-
-For now, keep in mind:
-
-- Only the file types above are parsed; non-matching files are skipped silently.
-- HTML parsing is tolerant but not template-aware—Jinja/templating tags are ignored.
-- CSS detection operates on raw CSS; preprocessors (SCSS/LESS) must emit CSS before scanning.
+These are just examples; adjust globs to your layout. The scanner is framework/language agnostic—it only reads HTML/Jinja/CSS files wherever they live.
