@@ -1,0 +1,25 @@
+name: "Baseline Warden"
+description: "Run Baseline Warden scan with a provided configuration"
+author: "Baseline Warden"
+
+inputs:
+  config:
+    description: "Path to baseline-warden.toml"
+    required: false
+    default: "baseline-warden.toml"
+
+runs:
+  using: "composite"
+  steps:
+    - run: pip install -e .
+      shell: bash
+    - run: bw sync --lock
+      shell: bash
+    - run: bw scan --ci --config ${{ inputs.config }} --out console,json,gh-annotations --dry-run
+      shell: bash
+    - run: echo '{"note": "Composite action placeholder"}' > report.json
+      shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        name: baseline-warden-report
+        path: report.json

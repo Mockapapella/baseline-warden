@@ -1,0 +1,5 @@
+- repo: https://github.com/your-org/baseline-warden
+  rev: v0.1.0
+  hooks:
+    - id: baseline-warden
+      args: ["--config", "baseline-warden.toml"]

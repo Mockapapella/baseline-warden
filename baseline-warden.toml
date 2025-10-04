@@ -1,0 +1,26 @@
+[policy]
+required_status = "newly_or_widely"
+unknown_behavior = "warn"
+
+[include]
+paths = ["src/**", "templates/**", "static/**"]
+
+[ignore]
+globs = [
+  "node_modules/**",
+  "dist/**",
+  "build/**",
+  "vendor/**",
+  "coverage/**",
+  ".next/**",
+  ".vite/**",
+  ".output/**",
+  "**/*.min.*"
+]
+
+[allowlist]
+feature_ids = []
+bcd_keys = []
+
+[output]
+formats = ["console", "json", "gh-annotations"]

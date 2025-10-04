@@ -1,0 +1,2 @@
+[console_scripts]
+bw = baseline_warden.cli:app

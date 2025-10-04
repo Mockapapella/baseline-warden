@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: baseline-warden
+        name: baseline-warden
+        entry: bw scan --dry-run --config baseline-warden.toml
+        language: system
+        files: '\\.(html|htm|jinja|jinja2|css)$'

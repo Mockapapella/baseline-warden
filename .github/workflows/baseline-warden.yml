@@ -1,0 +1,25 @@
+name: Baseline Warden
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -e .
+      - run: bw sync --lock
+      - run: bw scan --ci --config baseline-warden.toml --out console,json,gh-annotations --dry-run
+      - name: Placeholder report artifact
+        run: echo '{"note": "Report generation pending implementation."}' > report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-warden-report
+          path: report.json
+        if: always()
