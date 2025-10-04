@@ -28,6 +28,11 @@ class _BaselineHTMLParser(HTMLParser):
             key = attr.lower()
             if key.startswith("data-") or key.startswith("x-") or key.startswith("on"):
                 continue
+            # Ignore common global or evergreen attributes that aren't tracked by Baseline
+            if key in {"class", "id", "style", "lang", "title", "dir", "hidden"}:
+                continue
+            if key.startswith("aria-"):
+                continue
             attr_key = f"html.elements.{tag}.{key}"
             self.detections.append(Detection(path=self._path, line=line, bcd_key=attr_key))
 
