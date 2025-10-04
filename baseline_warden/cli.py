@@ -7,8 +7,16 @@ from typing import List
 
 import typer
 
+import httpx
+
 from .config import BaselineWardenConfig, load_config
+from .index.build import (
+    assemble_lock_features,
+    build_web_features_index,
+    fetch_web_features_dataset,
+)
 from .index.cache import BaselineLock, load_lock, write_lock
+from .index.fetch import fetch_features
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
 
@@ -33,10 +41,19 @@ def sync(
         typer.echo("Sync is stubbed in the MVP scaffold; use --lock to generate a placeholder lock file.")
         raise typer.Exit(code=0)
 
-    snapshot = BaselineLock()
+    try:
+        dataset = fetch_web_features_dataset()
+        index = build_web_features_index(dataset)
+        baseline_result = fetch_features()
+    except httpx.HTTPError as exc:  # pragma: no cover - network failure
+        raise typer.Exit(code=1, message=f"Failed to fetch Baseline data: {exc}")
+
+    lock_entries = assemble_lock_features(index=index, baseline_features=baseline_result.features)
+    snapshot = BaselineLock(features=lock_entries)
     write_lock(out_path, snapshot)
+
     typer.echo(
-        "Created placeholder lock file at "
+        "Created Baseline lock file at "
         f"{out_path} ({snapshot.feature_count} features; generated_at={snapshot.generated_at.isoformat()})"
     )
 
