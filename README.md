@@ -5,7 +5,7 @@ Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mappi
 ## What it does today
 
 - `bw sync --lock` downloads Baseline data (Web Status API + `web-features`), writes `baseline.lock.json`, and records SHA-256 hashes for reproducible CI runs.
-- `bw scan` walks configured HTML/CSS paths, emits BCD keys, resolves them against the lock snapshot, and evaluates policy:
+- `bw scan` walks configured HTML/CSS paths, emits BCD keys (MDN Browser Compatibility Data), resolves them against the lock snapshot, and evaluates policy:
   - Fails on `limited` features.
   - Passes on `widely`; passes/warns on `newly` depending on policy (`widely` vs `newly_or_widely`).
   - Warns/fails/ignores `unknown` per configuration.
@@ -13,6 +13,8 @@ Baseline Warden enforces Baseline compatibility for HTML and CSS assets by mappi
   - Rich console table summarising severity, Baseline status, feature name, and file locations.
   - `report.json` for CI artifacts.
   - GitHub Actions annotations (up to 50) for PR feedback.
+
+Note on BCD: BCD (MDN Browser Compatibility Data) is the canonical dataset of browser-support keys used by MDN and tooling (for example, `css.properties.display`, `html.elements.dialog`, `api.Navigator.share`). Baseline mapping uses these keys via the `web-features` compat_features field. See https://github.com/mdn/browser-compat-data
 
 ## Current scope
 
