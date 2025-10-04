@@ -35,7 +35,6 @@ Tip: add `--summary-only` for compact console output.
         language: system
         files: '\\.(html|htm|jinja|jinja2|css)$'
   ```
-  ```
 
 - GitHub Actions (minimal working example):
   ```yaml
