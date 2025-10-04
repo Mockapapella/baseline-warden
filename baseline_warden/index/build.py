@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import httpx
@@ -56,13 +58,22 @@ def fetch_web_features_dataset(
     client: Optional[httpx.Client] = None,
     url: str = WEB_FEATURES_URL,
     timeout: httpx.Timeout = WEB_FEATURES_TIMEOUT,
+    cache_path: Optional[Path] = None,
+    force_refresh: bool = False,
 ) -> WebFeaturesDataset:
     headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
+
+    if cache_path and not force_refresh and cache_path.exists():
+        return WebFeaturesDataset.model_validate_json(cache_path.read_text(encoding="utf-8"))
 
     def _do_request(http_client: httpx.Client) -> WebFeaturesDataset:
         response = http_client.get(url, headers=headers, timeout=timeout)
         response.raise_for_status()
-        return WebFeaturesDataset.model_validate_json(response.text)
+        dataset = WebFeaturesDataset.model_validate_json(response.text)
+        if cache_path:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(response.text, encoding="utf-8")
+        return dataset
 
     if client:
         return _do_request(client)

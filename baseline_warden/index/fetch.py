@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
-from typing import Iterable, Iterator, List, Optional, Sequence
+from pathlib import Path
+from typing import Iterable, List, Optional, Sequence
 
 import httpx
 from pydantic import BaseModel, Field
@@ -69,6 +71,8 @@ def fetch_features(
     client: Optional[httpx.Client] = None,
     base_url: str = BASE_URL,
     timeout: httpx.Timeout = DEFAULT_TIMEOUT,
+    cache_path: Optional[Path] = None,
+    force_refresh: bool = False,
 ) -> FetchResult:
     """Fetch features from the Web Status API with pagination."""
 
@@ -77,6 +81,12 @@ def fetch_features(
     collected: List[WebStatusFeature] = []
     next_token: Optional[str] = None
     total: Optional[int] = None
+
+    if cache_path and not force_refresh and cache_path.exists():
+        cached = json.loads(cache_path.read_text(encoding="utf-8"))
+        if cached.get("query") == effective_query:
+            features = [WebStatusFeature.model_validate(item) for item in cached.get("features", [])]
+            return FetchResult(features=features, total=cached.get("total"))
 
     def _request_loop(http_client: httpx.Client) -> None:
         nonlocal next_token, total
@@ -98,6 +108,15 @@ def fetch_features(
     else:
         with httpx.Client() as http_client:
             _request_loop(http_client)
+
+    if cache_path:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "query": effective_query,
+            "total": total,
+            "features": [feature.model_dump(mode="json", exclude_none=True) for feature in collected],
+        }
+        cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     return FetchResult(features=collected, total=total)
 

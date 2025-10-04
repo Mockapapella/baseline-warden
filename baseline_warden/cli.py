@@ -15,7 +15,7 @@ from .index.build import (
     build_web_features_index,
     fetch_web_features_dataset,
 )
-from .index.cache import BaselineLock, load_lock, write_lock
+from .index.cache import BaselineLock, get_cache_dir, load_lock, write_lock
 from .index.fetch import fetch_features
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
@@ -41,10 +41,15 @@ def sync(
         typer.echo("Sync is stubbed in the MVP scaffold; use --lock to generate a placeholder lock file.")
         raise typer.Exit(code=0)
 
+    cache_dir = get_cache_dir()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    web_features_cache = cache_dir / "web-features.json"
+    baseline_cache = cache_dir / "webstatus-baseline.json"
+
     try:
-        dataset = fetch_web_features_dataset()
+        dataset = fetch_web_features_dataset(cache_path=web_features_cache)
         index = build_web_features_index(dataset)
-        baseline_result = fetch_features()
+        baseline_result = fetch_features(cache_path=baseline_cache)
     except httpx.HTTPError as exc:  # pragma: no cover - network failure
         raise typer.Exit(code=1, message=f"Failed to fetch Baseline data: {exc}")
 

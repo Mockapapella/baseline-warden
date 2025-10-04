@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import List, Optional
@@ -55,3 +56,18 @@ def write_lock(path: Path, lock: BaselineLock) -> None:
 
 
 __all__ = ["BaselineLock", "LockFeature", "load_lock", "write_lock"]
+
+
+CACHE_ENV_VAR = "BASELINE_WARDEN_CACHE_DIR"
+
+
+def get_cache_dir() -> Path:
+    """Return the directory used for caching remote datasets."""
+
+    override = os.environ.get(CACHE_ENV_VAR)
+    if override:
+        return Path(override).expanduser()
+    return Path.home() / ".cache" / "baseline-warden"
+
+
+__all__.extend(["get_cache_dir", "CACHE_ENV_VAR"])
