@@ -8,7 +8,7 @@ from typing import List
 import typer
 
 from .config import BaselineWardenConfig, load_config
-from .index.cache import BaselineLock, write_lock
+from .index.cache import BaselineLock, load_lock, write_lock
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
 
@@ -47,15 +47,32 @@ def scan(
     out: List[str] = typer.Option(["console"], "--out", help="Output formats to emit."),
     ci: bool = typer.Option(False, "--ci", help="Enable CI-friendly behavior (non-zero exit on limited features)."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Run detectors without policy enforcement."),
+    lock_path: Path = typer.Option(
+        DEFAULT_LOCK_PATH,
+        "--lock-path",
+        help="Path to baseline.lock.json produced by `bw sync --lock`.",
+    ),
 ) -> None:
     """Scan configured paths for non-Baseline features (stub)."""
 
     cfg = _load_config(config)
+    if not lock_path.exists():
+        typer.echo(
+            "Lock file not found. Run `bw sync --lock` before scanning or pass --lock-path.",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
+    lock = load_lock(lock_path)
     typer.echo("Baseline Warden MVP scaffold")
     typer.echo(f" Policy: required_status={cfg.policy.required_status}, unknown_behavior={cfg.policy.unknown_behavior}")
     typer.echo(f" Include paths: {', '.join(cfg.include.paths)}")
     typer.echo(f" Ignore globs: {', '.join(cfg.ignore.globs[:4])} ...")
     typer.echo(f" Outputs requested: {', '.join(out)}")
+    typer.echo(
+        " Lock snapshot: "
+        f"{lock.feature_count} features (generated_at={lock.generated_at.isoformat()})"
+    )
 
     if dry_run:
         typer.echo(" Dry run complete (no detections performed yet).")
