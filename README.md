@@ -89,25 +89,6 @@ bw scan --summary-only --out console
 
 This prints totals and status counts without the per-finding table. The pre-commit hook in this repo uses `--summary-only` by default.
 
-## Quick start
-
-```bash
-uv venv .venv
-source .venv/bin/activate
-uv sync --all-extras  # install baseline-warden + dev extras
-
-# Fetch Baseline data and snapshot into baseline.lock.json
-bw sync --lock
-
-# Scan configured paths (fails on limited features)
-bw scan --out console,json
-
-# Dry run to preview without failing the build
-bw scan --dry-run
-```
-
-Configuration defaults live in `baseline-warden.toml`. Use `--config` and `--lock-path` to point at alternative locations.
-
 ## Configuration reference
 
 Create `baseline-warden.toml` at your repo root to tailor scanning:
