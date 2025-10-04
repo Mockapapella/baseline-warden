@@ -15,7 +15,7 @@ from .index.build import (
     build_web_features_index,
     fetch_web_features_dataset,
 )
-from .index.cache import BaselineLock, get_cache_dir, load_lock, write_lock
+from .index.cache import BaselineLock, compute_sha256, get_cache_dir, load_lock, write_lock
 from .index.fetch import fetch_features
 
 app = typer.Typer(help="Baseline compatibility gate for web projects.")
@@ -34,6 +34,7 @@ def _load_config(path: Path) -> BaselineWardenConfig:
 def sync(
     lock: bool = typer.Option(False, "--lock", help="Persist resolved Baseline data to baseline.lock.json."),
     out_path: Path = typer.Option(DEFAULT_LOCK_PATH, "--lock-path", help="Path to the lock snapshot."),
+    refresh: bool = typer.Option(False, "--refresh", help="Ignore caches and refetch remote datasets."),
 ) -> None:
     """Fetch Baseline data and optionally persist a lock snapshot."""
 
@@ -47,14 +48,25 @@ def sync(
     baseline_cache = cache_dir / "webstatus-baseline.json"
 
     try:
-        dataset = fetch_web_features_dataset(cache_path=web_features_cache)
+        dataset = fetch_web_features_dataset(cache_path=web_features_cache, force_refresh=refresh)
         index = build_web_features_index(dataset)
-        baseline_result = fetch_features(cache_path=baseline_cache)
+        baseline_result = fetch_features(cache_path=baseline_cache, force_refresh=refresh)
     except httpx.HTTPError as exc:  # pragma: no cover - network failure
         raise typer.Exit(code=1, message=f"Failed to fetch Baseline data: {exc}")
 
     lock_entries = assemble_lock_features(index=index, baseline_features=baseline_result.features)
-    snapshot = BaselineLock(features=lock_entries)
+    lock_metadata = {
+        "web_features": {
+            "cache_path": str(web_features_cache),
+            "sha256": compute_sha256(web_features_cache) if web_features_cache.exists() else None,
+        },
+        "web_status": {
+            "cache_path": str(baseline_cache),
+            "sha256": compute_sha256(baseline_cache) if baseline_cache.exists() else None,
+            "total": baseline_result.total,
+        },
+    }
+    snapshot = BaselineLock(features=lock_entries, metadata=lock_metadata)
     write_lock(out_path, snapshot)
 
     typer.echo(

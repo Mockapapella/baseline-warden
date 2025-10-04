@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from datetime import UTC, datetime
 from pathlib import Path
@@ -31,6 +32,7 @@ class BaselineLock(BaseModel):
         description="UTC timestamp describing when the snapshot was generated",
     )
     features: List[LockFeature] = Field(default_factory=list, description="Feature metadata included in the snapshot")
+    metadata: Optional[dict] = Field(default=None, description="Snapshot metadata including source hashes and baseline counts.")
 
     @computed_field
     @property
@@ -68,6 +70,16 @@ def get_cache_dir() -> Path:
     if override:
         return Path(override).expanduser()
     return Path.home() / ".cache" / "baseline-warden"
+
+
+def compute_sha256(path: Path) -> str:
+    """Compute the sha256 hex digest for a file."""
+
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 __all__.extend(["get_cache_dir", "CACHE_ENV_VAR"])
