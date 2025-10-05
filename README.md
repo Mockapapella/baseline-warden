@@ -10,11 +10,11 @@ Install uv (one‑liner):
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Install Baseline Warden from GitHub (master) into a project venv and scan:
+Install Baseline Warden from PyPI with uv and scan:
 
 ```bash
 uv venv .venv && source .venv/bin/activate
-uv pip install "git+https://github.com/Mockapapella/baseline-warden@master"
+uv pip install baseline-warden
 
 bw sync --lock                   # build a Baseline snapshot
 bw scan --out console,json       # fails on limited; warns on unknown

@@ -11,7 +11,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: pip install -e .
+    - run: pip install baseline-warden
       shell: bash
     - run: bw sync --lock
       shell: bash
