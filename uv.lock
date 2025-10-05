@@ -27,7 +27,6 @@ wheels = [
 
 [[package]]
 name = "baseline-warden"
-version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
