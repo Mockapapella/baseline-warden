@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=69", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "baseline-warden"
-version = "0.0.0"
+dynamic = ["version"]
 description = "Baseline compatibility gate for web projects"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,3 +27,8 @@ dev = ["pytest>=8,<9"]
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools_scm]
+# Use the git tag as the project version when building from a tag.
+# Provides a safe fallback for environments without SCM metadata.
+fallback_version = "0.0.0"
