@@ -43,7 +43,7 @@ Supported Python versions: 3.11, 3.12, and 3.13. The example workflows use Pytho
         files: '\\.(html|htm|jinja|jinja2|css)$'
   ```
 
-- GitHub Actions (minimal working example):
+GitHub Actions (minimal working example):
   ```yaml
   name: Baseline Warden
 
@@ -74,7 +74,8 @@ Supported Python versions: 3.11, 3.12, and 3.13. The example workflows use Pytho
         - name: Run Baseline scan
           run: uv run bw scan --out console --ci
   ```
-  - Ensure `baseline.lock.json` is committed (recommended). If you prefer to build it in CI, add a step before the scan: `uv run bw sync --lock`.
+
+- Ensure `baseline.lock.json` is committed (recommended). If you prefer to build it in CI, add a step before the scan: `uv run bw sync --lock`.
 
 ## Configuration
 
