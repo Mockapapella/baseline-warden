@@ -19,6 +19,8 @@ uv pip install baseline-warden
 bw sync --lock                   # build a Baseline snapshot
 bw scan --out console,json       # fails on limited; warns on unknown
 # Tip: add --summary-only for compact console output
+
+Supported Python versions: 3.11, 3.12, and 3.13. The example workflows use Python 3.13, and CI tests all three.
 ```
 
 ## What it checks
